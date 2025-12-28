@@ -1,0 +1,1 @@
+odin build . -out:breakout.exe -debug
