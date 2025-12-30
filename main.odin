@@ -30,6 +30,14 @@ screen_y_f : f32 = f32(screen_y)
 brick_width := screen_x_f / f32(bricks_rows_count)
 brick_height : f32 = 20
 
+paddle := rl.Rectangle {screen_x_f / 2, screen_y_f - 40, brick_width, brick_height}
+ball_size : f32 = 20 
+ball := rl.Rectangle {paddle.x + paddle.width, paddle.y - ball_size, ball_size, ball_size}
+ball_direction := [2]f32{0,-1}
+ball_speed : f32 = 0
+
+ball_attached_to_paddle := true
+
 main :: proc() {
 
 	for &active in bricks {
@@ -40,9 +48,26 @@ main :: proc() {
 
 	for !rl.WindowShouldClose() {
 
+		frame_time := rl.GetFrameTime()
+
 		mouse_position := rl.GetMousePosition()
 		mouse_brick_row := int(mouse_position.y/brick_height)
 		mouse_brick_column := int(mouse_position.x/brick_width)
+
+		paddle.x = mouse_position.x - paddle.width/2
+		if ball_attached_to_paddle {
+			ball.x = mouse_position.x - ball.width/2
+			ball.y = paddle.y - ball_size
+		}
+
+		if rl.IsMouseButtonPressed(.LEFT) {
+			ball_attached_to_paddle = false
+			ball_speed = 300.0
+		}
+
+		ball_velocity := ball_direction * ball_speed
+		ball.x += ball_velocity.x * frame_time
+		ball.y += ball_velocity.y * frame_time
 
 		is_valid_row := mouse_brick_row >= 0 && mouse_brick_row < bricks_rows_count 
 		is_valid_column := mouse_brick_column >= 0 && mouse_brick_column < bricks_columns_count
@@ -79,6 +104,8 @@ main :: proc() {
 			rl.DrawRectangleRec(rect, row_colors[r])
 		}
 
+		rl.DrawRectangleRec(paddle, rl.WHITE)
+		rl.DrawRectangleRec(ball, rl.RAYWHITE)
 		rl.EndDrawing()
 	}
 }
